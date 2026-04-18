@@ -25,3 +25,14 @@ Built as a modern evolution of the systems-thinking rigor found at **42 London**
 2. **Launch the Infrastructure:**
    ```bash
    docker-compose up -d
+3. **Verify the Graph:**
+   Access the Neo4j Browser at http://localhost:7474 (User: neo4j / Pass: password123).
+
+4. **Verify the Metadata:**
+   libSQL is listening on localhost:8081.
+
+## 📝 The Pothole Philosophy
+This project maintains an active Pothole Log (docs/pothole_log.md). We document every engineering friction point—from YAML indentation traps to port conflicts—ensuring that the "Bridge" we build is informed by the failures of the past.
+---
+
+Developed as an independent engineering study, April 2026.
