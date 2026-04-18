@@ -1,0 +1,4 @@
+bin/
+neo4j_data/
+libsql_data/
+.env

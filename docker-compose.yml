@@ -1,0 +1,28 @@
+services:
+  # Bridge 1: The Graph (Neo4j)
+  neo4j:
+    image: neo4j:5.15
+    container_name: usb_graph
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j_data:/data
+
+  # Bridge 2: The Metadata (libSQL)
+  libsql:
+    image: ghcr.io/tursodatabase/libsql-server:latest
+    container_name: usb_metadata
+    ports:
+      - "8081:8080" # Map host 8081 to container 8080
+    environment:
+      - SQLD_NODE=primary
+    volumes:
+      - libsql_data:/var/lib/sqld
+
+volumes:
+  neo4j_data:
+  libsql_data:
