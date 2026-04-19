@@ -1,3 +1,4 @@
+![Seven Bridges CI](https://github.com/kevshouse/uber-sieben-brucken/actions/workflows/go_tests.yml/badge.svg)
 # Über sieben Brücken musst du gehn
 
 > *"The topology of the path matters more than the distance between the shores."*
