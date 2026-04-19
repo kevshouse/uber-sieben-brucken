@@ -28,7 +28,7 @@ The graph represents code evolution as a **doubly-linked chain** anchored to a s
 
 The following diagram illustrates the bidirectional flow between the anchor and its evolving milestones.
 
-\`\`\`mermaid  
+```mermaid  
 graph TD  
     S\[Snippet Anchor\] \--|HAS\_LATEST|--\> V3((Version 3))  
     V3 \--PREVIOUS--\> V2((Version 2)) \--NEXT--\> V3  
@@ -39,8 +39,8 @@ graph TD
     style S fill:\#f9f,stroke:\#333,stroke-width:4px  
     style V3 fill:\#00ff00,stroke:\#333,stroke-width:2px  
     style V1 stroke-dasharray: 5 5  
-\`\`\`  
-\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+```
+---
 
 ## **4\. Design Reasoning (Spotnet Legacy)**
 
