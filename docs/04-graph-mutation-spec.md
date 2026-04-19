@@ -4,7 +4,7 @@ This document will serve as the "Bridge Blueprint." By combining the **Cypher** 
 
 ---
 
-# high-performance **Temporal Navigation Engine**.
+# High-performance **Temporal Navigation Engine**.
 
 ---
 
@@ -29,11 +29,11 @@ The graph represents code evolution as a **doubly-linked chain** anchored to a s
 The following diagram illustrates the bidirectional flow between the anchor and its evolving milestones.
 
 ```mermaid  
-graph TD  
-    S\[Snippet Anchor\] \--|HAS\_LATEST|--\> V3((Version 3))  
-    V3 \--PREVIOUS--\> V2((Version 2)) \--NEXT--\> V3  
-    V2 \--PREVIOUS--\> V1((Version 1 \- Genesis))  
-    V1 \--NEXT--\> V2  
+    graph TD  
+    S\[Snippet Anchor\] --|HAS\_LATEST|--> V3((Version 3))  
+    V3 --PREVIOUS--> V2((Version 2)) --NEXT--\> V3  
+    V2 --PREVIOUS--> V1((Version 1 - Genesis))  
+    V1 --NEXT--> V2  
     
 
     style S fill:\#f9f,stroke:\#333,stroke-width:4px  
