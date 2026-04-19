@@ -30,8 +30,8 @@ The following diagram illustrates the bidirectional flow between the anchor and 
 
 ```mermaid  
     graph TD  
-    S\[Snippet Anchor\] --|HAS\_LATEST|--> V3((Version 3))  
-    V3 --PREVIOUS--> V2((Version 2)) --NEXT--\> V3  
+    S[Snippet Anchor] --|HAS_LATEST|--> V3((Version 3))  
+    V3 --PREVIOUS--> V2((Version 2)) --NEXT--> V3  
     V2 --PREVIOUS--> V1((Version 1 - Genesis))  
     V1 --NEXT--> V2  
     
