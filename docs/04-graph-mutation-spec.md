@@ -23,9 +23,11 @@ This diagram illustrates how a Snippet evolves from a "Genesis" state through mu
 
 ```mermaid
 graph TD
-    S[Snippet Anchor] ---|HAS_LATEST| V3((Version 3))
-    V3 ---|PREVIOUS| V2((Version 2))
-    V2 ---|PREVIOUS| V1((Version 1 - Genesis))
+    S[Snippet Anchor] --|HAS_LATEST|--> V3((Version 3))
+    V3 --PREVIOUS--> V2((Version 2)) --NEXT--> V3
+    V2 --PREVIOUS--> V1((Version 1 - Genesis))
+    V1 --NEXT--> V2
+    
 
     style S fill:#f9f,stroke:#333,stroke-width:4px
     style V3 fill:#00ff00,stroke:#333,stroke-width:2px
