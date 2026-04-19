@@ -22,6 +22,8 @@ The graph represents code evolution as a directed, acyclic path. Every snippet i
 This diagram illustrates how a Snippet evolves from a "Genesis" state through multiple iterations.
 
 Code snippet  
+```
+Mermaid
 graph TD  
     S\[Snippet Anchor\] \---|HAS\_LATEST| V3((Version 3))  
     V3 \---|PREVIOUS| V2((Version 2))  
@@ -30,7 +32,7 @@ graph TD
     style S fill:\#f9f,stroke:\#333,stroke-width:4px  
     style V3 fill:\#00ff00,stroke:\#333,stroke-width:2px  
     style V1 stroke-dasharray: 5 5
-
+```
 ---
 
 ## **3\. The "Handshake" Mutation (Cypher)**
