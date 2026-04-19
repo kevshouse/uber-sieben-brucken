@@ -22,9 +22,8 @@ The graph represents code evolution as a directed, acyclic path. Every snippet i
 This diagram illustrates how a Snippet evolves from a "Genesis" state through multiple iterations.
 
 Code snippet  
-```
-Mermaid
-graph TD  
+```mermaid
+    graph TD  
     S\[Snippet Anchor\] \---|HAS\_LATEST| V3((Version 3))  
     V3 \---|PREVIOUS| V2((Version 2))  
     V2 \---|PREVIOUS| V1((Version 1 \- Genesis))
