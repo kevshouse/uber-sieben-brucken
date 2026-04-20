@@ -13,3 +13,13 @@ type Snippet struct {
 	Title   string
 	OwnerID string
 }
+
+// Citation uses this Pattern: "Relationship as an Entity"
+// It tracks why one snippet refers to another.
+type Citation struct {
+	ID        string
+	SourceID  string    // ID of the Snippet that is citing
+	TargetID  string    // ID of the Snippet being cited
+	Context   string    // The "Reason" for the citation
+	Timestamp time.Time
+}

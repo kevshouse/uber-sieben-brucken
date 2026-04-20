@@ -2,7 +2,6 @@ package adapter
 
 import (
 	"context"
-	"time"
 
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -12,9 +11,8 @@ type Neo4jAdapter struct {
 	driver neo4j.DriverWithContext
 }
 
-// Fixed: Returns (*Neo4jAdapter, error) to match the test's second error
-func NewNeo4jAdapter(uri, user, pass string) (*Neo4jAdapter, error) {
-	driver, err := neo4j.NewDriverWithContext(uri, neo4j.BasicAuth(user, pass, ""))
+func NewNeo4jAdapter(uri, username, password string) (*Neo4jAdapter, error) {
+	driver, err := neo4j.NewDriverWithContext(uri, neo4j.BasicAuth(username, password, ""))
 	if err != nil {
 		return nil, err
 	}
@@ -25,24 +23,22 @@ func (a *Neo4jAdapter) SaveVersion(ctx context.Context, snippetID string, v *cor
 	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	// Fixed: Changed tx type to neo4j.ManagedTransaction
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MERGE (anchor:Snippet {id: $snippetID})
-			WITH anchor
-			OPTIONAL MATCH (anchor)-[oldRel:HAS_LATEST]->(prev:Version)
-			CREATE (new:Version {id: $vID, content: $content, ts: $ts})
-			CREATE (anchor)-[:HAS_LATEST]->(new)
+			MATCH (s:Snippet {id: $snippetID})
+			OPTIONAL MATCH (s)-[oldRel:LATEST_VERSION]->(oldV:Version)
+			CREATE (newV:Version {id: $id, content: $content, ts: $ts})
+			CREATE (s)-[:LATEST_VERSION]->(newV)
 			DELETE oldRel
-			WITH prev, new
-			WHERE prev IS NOT NULL
-			CREATE (new)-[:PREVIOUS]->(prev)
-			CREATE (prev)-[:NEXT]->(new)
-			RETURN new.id
+			WITH oldV, newV
+			WHERE oldV IS NOT NULL
+			CREATE (newV)-[:PREVIOUS]->(oldV)
+			CREATE (oldV)-[:NEXT]->(newV)
+			RETURN newV.id
 		`
 		params := map[string]interface{}{
 			"snippetID": snippetID,
-			"vID":       v.ID,
+			"id":        v.ID,
 			"content":   v.Content,
 			"ts":        v.Timestamp.Unix(),
 		}
@@ -56,36 +52,74 @@ func (a *Neo4jAdapter) GetHistory(ctx context.Context, snippetID string) ([]*cor
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		// This query finds the snippet and follows the chain of versions
 		query := `
-			MATCH (s:Snippet {id: $snippetID})-[:HAS_LATEST]->(latest:Version)
-			MATCH (latest)-[:PREVIOUS*0..]->(v:Version)
-			RETURN v.id, v.content, v.ts
-			ORDER BY v.ts ASC
+			MATCH (s:Snippet {id: $snippetID})-[:LATEST_VERSION]->(v:Version)
+			MATCH (v)-[:PREVIOUS*0..]->(history)
+			RETURN history.id, history.content, history.ts ORDER BY history.ts DESC
 		`
 		res, err := tx.Run(ctx, query, map[string]interface{}{"snippetID": snippetID})
 		if err != nil {
 			return nil, err
 		}
 
-		var history []*core.Version
+		var versions []*core.Version
 		for res.Next(ctx) {
 			record := res.Record()
-			vID, _ := record.Get("v.id")
-			content, _ := record.Get("v.content")
-			ts, _ := record.Get("v.ts")
+			id, _ := record.Get("history.id")
+			content, _ := record.Get("history.content")
+			_, _ = record.Get("history.ts")
 
-			history = append(history, &core.Version{
-				ID:        vID.(string),
-				Content:   content.(string),
-				Timestamp: time.Unix(ts.(int64), 0),
+			versions = append(versions, &core.Version{
+				ID:      id.(string),
+				Content: content.(string),
 			})
 		}
-		return history, nil
+		return versions, nil
 	})
 
 	if err != nil {
 		return nil, err
 	}
 	return result.([]*core.Version), nil
+}
+
+// CiteSnippet implements the University Citation Pattern: Relationship as an Entity
+func (a *Neo4jAdapter) CiteSnippet(ctx context.Context, c *core.Citation) error {
+	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (source:Snippet {id: $sourceID})
+			MATCH (target:Snippet {id: $targetID})
+			
+			OPTIONAL MATCH (source)-[oldRel:CITES_LATEST]->(prevCit:Citation)-[:CITES_TARGET]->(target)
+			
+			CREATE (newCit:Citation {
+				id: $citID, 
+				context: $context, 
+				ts: $ts
+			})
+			
+			CREATE (source)-[:CITES_LATEST]->(newCit)
+			CREATE (newCit)-[:CITES_TARGET]->(target)
+			
+			DELETE oldRel
+			WITH prevCit, newCit
+			WHERE prevCit IS NOT NULL
+			CREATE (newCit)-[:PREVIOUS]->(prevCit)
+			CREATE (prevCit)-[:NEXT]->(newCit)
+			
+			RETURN newCit.id
+		`
+		params := map[string]interface{}{
+			"sourceID": c.SourceID,
+			"targetID": c.TargetID,
+			"citID":    c.ID,
+			"context":  c.Context,
+			"ts":       c.Timestamp.Unix(),
+		}
+		return tx.Run(ctx, query, params)
+	})
+	return err
 }
