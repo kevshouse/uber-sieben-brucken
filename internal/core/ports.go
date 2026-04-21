@@ -2,10 +2,13 @@ package core
 
 import "context"
 
-type VersionService interface {
-	SaveVersion(ctx context.Context, snippetID string, v *Version) error
-	GetHistory(ctx context.Context, snippetID string) ([]*Version, error)
+// IdentityRepository defines the 'Shore' behavior (libSQL)
+type IdentityRepository interface {
+	CreateSnippet(ctx context.Context, s *Snippet) error
+}
 
-	// THE CITATION BRIDGE: The Citation Handshake
-	CiteSnippet(ctx context.Context, citatio *Citation) error
+// GraphRepository defines the 'Current' behavior (Neo4j)
+type GraphRepository interface {
+	SaveVersion(ctx context.Context, snippetID string, v *Version) error
+	CiteSnippet(ctx context.Context, c *Citation) error
 }

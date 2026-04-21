@@ -9,17 +9,16 @@ type Version struct {
 }
 
 type Snippet struct {
-	ID      string
-	Title   string
-	OwnerID string
+	ID        string
+	Title     string
+	OwnerID   string
+	CreatedAt time.Time
 }
 
-// Citation uses this Pattern: "Relationship as an Entity"
-// It tracks why one snippet refers to another.
 type Citation struct {
 	ID        string
-	SourceID  string    // ID of the Snippet that is citing
-	TargetID  string    // ID of the Snippet being cited
-	Context   string    // The "Reason" for the citation
+	SourceID  string
+	TargetID  string
+	Context   string
 	Timestamp time.Time
 }

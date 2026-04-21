@@ -88,3 +88,18 @@ The Folly: Deleting a snippet without cleaning up its ALNs.
    - **The Reality:** If Snippet B is deleted, the ALN pointing to it becomes a "bridge to nowhere."
 
    - **The Mitigation:** Our spec should note that ALNs require referential integrity across the graph. When we eventually implement deletion, we must use a DETACH DELETE pattern to ensure the current doesn't leave behind ghostly remains.
+
+## 13. 🚧 The "Interface Mismatch"
+
+The Folly: Adding a function to the Neo4jAdapter but forgetting to add it to the GraphRepository interface in ports.go.
+
+   - **The Reality:** The SnippetService will refuse to compile. It only "sees" what is written in the interface. Even if the adapter has the power to do more, the service can only press the buttons defined in the contract.
+
+   - **The Mitigation:** Always update ports.go first (The Blueprint), then update your Adapters (The Tools).
+
+## 14. 🚧 The "Mock vs. Reality" Gap
+The Folly: Thinking that because the Service test passed, the whole app is finished.
+
+- **The Reality:** The Service test proves the logic is right, but it doesn't check if your SQL queries are valid or if Neo4j is online.
+
+- **The Mitigation:** This is why we have the Adapter Tests we ran yesterday. Together, these two layers of testing (Service + Adapter) create an unbreakable "Bridge."
