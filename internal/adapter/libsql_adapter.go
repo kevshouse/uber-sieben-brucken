@@ -4,39 +4,47 @@ import (
 	"context"
 	"database/sql"
 
-	_ "github.com/tursodatabase/go-libsql"
+	"github.com/kevshouse/uber-sieben-brucken/internal/core"
+	_ "github.com/ncruces/go-sqlite3/driver" // '_' forces the compiler to keep package for registering 'libsql' at runtime
 )
 
 type LibSQLAdapter struct {
 	db *sql.DB
 }
 
-// Bootstrap creates the schema necessary in LibSQL if it doesn't already exist.
-func (a *LibSQLAdapter) Bootstrap(ctx context.Context) error {
-		query := `
-		CREATE TABLE IF NOT EXISTS snippets (
-				id TEXT PRIMARY KEY,
-				title TEXT NOT NULL,
-				owner_id TEXT NOT NULL
-				created_at INTEGER NOT NULL
-		);`
-
-		_, err := a.db.ExecContext(ctx, query)
-		return err
-}
-
+// NewLibSQLAdapter initializes the connection and prepares the 'Shore'
 func NewLibSQLAdapter(url string) (*LibSQLAdapter, error) {
-	db, err := sql.Open("libsql", url)
+	db, err := sql.Open("sqlite3", url)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	adapter := &LibSQLAdapter{db: db}
 
-	// We use context.Background() here because this all happens at startup.
+	// Bootstrap ensures the snippets table exists at startup
 	if err := adapter.Bootstrap(context.Background()); err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	return adapter, nil
+}
+
+// Bootstrap creates the necessary table if it doesn't exist
+func (a *LibSQLAdapter) Bootstrap(ctx context.Context) error {
+	query := `
+	CREATE TABLE IF NOT EXISTS snippets (
+		id TEXT PRIMARY KEY,
+		title TEXT,
+		owner_id TEXT,
+		created_at DATETIME
+	);`
+	_, err := a.db.ExecContext(ctx, query)
+	return err
+}
+
+// CreateSnippet satisfies the core.IdentityRepository interface
+func (a *LibSQLAdapter) CreateSnippet(ctx context.Context, s *core.Snippet) error {
+	query := `INSERT INTO snippets (id, title, owner_id, created_at) VALUES (?, ?, ?, ?)`
+	_, err := a.db.ExecContext(ctx, query, s.ID, s.Title, s.OwnerID, s.CreatedAt)
+	return err
 }

@@ -103,3 +103,32 @@ The Folly: Thinking that because the Service test passed, the whole app is finis
 - **The Reality:** The Service test proves the logic is right, but it doesn't check if your SQL queries are valid or if Neo4j is online.
 
 - **The Mitigation:** This is why we have the Adapter Tests we ran yesterday. Together, these two layers of testing (Service + Adapter) create an unbreakable "Bridge."
+
+## 15. 🚧 The "JSON Marshalling" Trap
+The Folly: Forgetting that Go is strictly typed while JSON is flexible.
+
+- **The Reality:** If a user sends a string where you expect an integer, the bridge will "creak."
+
+- **The Mitigation:** We will define specific Request Structs with JSON tags to ensure the data is validated the moment it hits the gate.
+
+## 16 🚧 The "Request Body" Ghost
+The Folly: Trying to read r.Body twice.
+
+- **The Reality:** In Go, the request body is a "Stream." Once you read it (using the JSON decoder), it is consumed. If you try to read it again, it will be empty.
+
+- **The Mitigation:** We decode it once into our createSnippetRequest struct and then immediately move to the logic.
+
+## 17 🚧 The "Missing ID" Creak
+The Folly: A user sends a request where source_id or target_id is empty.
+
+- **The Reality:** Our Service will try to tell Neo4j to link "nothing" to "nothing," and the graph will complain.
+
+- **The Mitigation:** In a more advanced version, we would add Validation. For now, if the IDs don't exist in the database, our Service will return an error, and this handler will correctly pass that error back to the user as a 500 Internal Server Error.
+
+## 🚧 The "Import Conflict"
+The Folly: Importing net/http and your own internal/adapter/http package at the same time.
+
+- **The Reality:** Go won't allow two packages with the same name.
+
+- **The Mitigation:** In the import block, I suggest aliasing your internal package as api to avoid a collision:
+api "github.com/kevshouse/uber-sieben-brucken/internal/adapter/http"
