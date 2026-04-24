@@ -41,7 +41,7 @@ func (s *SnippetService) CreateSnippet(ctx context.Context, title, ownerID, cont
 		Timestamp: now,
 	}
 
-	if err := s.graphRepo.SaveVersion(ctx, id, v); err != nil {
+	if err := s.graphRepo.SaveVersion(ctx, snippet, v); err != nil { // Pass 'snippet' here
 		return nil, fmt.Errorf("failed to anchor graph lineage: %w", err)
 	}
 
@@ -58,4 +58,11 @@ func (s *SnippetService) CiteSnippet(ctx context.Context, sourceID, targetID, co
 	}
 
 	return s.graphRepo.CiteSnippet(ctx, citation)
+}
+
+func (s *SnippetService) SearchSnippets(ctx context.Context, query string) ([]*Snippet, error) {
+	if query == "" {
+		return []*Snippet{}, nil
+	}
+	return s.identityRepo.Search(ctx, query) //We ask Identiy Shore (libSQL) to find the matches.
 }

@@ -19,25 +19,28 @@ func NewNeo4jAdapter(uri, username, password string) (*Neo4jAdapter, error) {
 	return &Neo4jAdapter{driver: driver}, nil
 }
 
-func (a *Neo4jAdapter) SaveVersion(ctx context.Context, snippetID string, v *core.Version) error {
+func (a *Neo4jAdapter) SaveVersion(ctx context.Context, s *core.Snippet, v *core.Version) error {
 	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MATCH (s:Snippet {id: $snippetID})
-			OPTIONAL MATCH (s)-[oldRel:LATEST_VERSION]->(oldV:Version)
-			CREATE (newV:Version {id: $id, content: $content, ts: $ts})
-			CREATE (s)-[:LATEST_VERSION]->(newV)
-			DELETE oldRel
-			WITH oldV, newV
-			WHERE oldV IS NOT NULL
-			CREATE (newV)-[:PREVIOUS]->(oldV)
-			CREATE (oldV)-[:NEXT]->(newV)
-			RETURN newV.id
-		`
+		MERGE (n:Snippet {id: $snippetID})
+		SET n.title = $title, n.owner_id = $ownerID
+		WITH n  // <--- This is the essential bridge!
+		OPTIONAL MATCH (n)-[oldRel:LATEST_VERSION]->(oldV:Version)
+		CREATE (newV:Version {id: $id, content: $content, ts: $ts})
+		CREATE (n)-[:LATEST_VERSION]->(newV)
+		DELETE oldRel
+		WITH oldV, newV
+		WHERE oldV IS NOT NULL
+		CREATE (newV)-[:PREVIOUS]->(oldV)
+		RETURN newV.id
+	`
 		params := map[string]interface{}{
-			"snippetID": snippetID,
+			"snippetID": s.ID,
+			"title"	:     s.Title,
+			"ownerID":   s.OwnerID,
 			"id":        v.ID,
 			"content":   v.Content,
 			"ts":        v.Timestamp.Unix(),

@@ -43,6 +43,8 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/search", handler.SearchSnippets)
+
 	log.Println("🌉 Bridge is open on :9090")
 	if err := http.ListenAndServe(":9090", nil); err != nil {
 		log.Fatal(err)
@@ -55,3 +57,4 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
+
