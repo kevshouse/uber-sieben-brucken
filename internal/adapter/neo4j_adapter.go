@@ -2,6 +2,8 @@ package adapter
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -91,38 +93,34 @@ func (a *Neo4jAdapter) CiteSnippet(ctx context.Context, c *core.Citation) error 
 	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := `
 			MATCH (source:Snippet {id: $sourceID})
-			MATCH (target:Snippet {id: $targetID})
-			
-			OPTIONAL MATCH (source)-[oldRel:CITES_LATEST]->(prevCit:Citation)-[:CITES_TARGET]->(target)
-			
-			CREATE (newCit:Citation {
-				id: $citID, 
-				context: $context, 
-				ts: $ts
-			})
-			
-			CREATE (source)-[:CITES_LATEST]->(newCit)
-			CREATE (newCit)-[:CITES_TARGET]->(target)
-			
-			DELETE oldRel
-			WITH prevCit, newCit
-			WHERE prevCit IS NOT NULL
-			CREATE (newCit)-[:PREVIOUS]->(prevCit)
-			CREATE (prevCit)-[:NEXT]->(newCit)
-			
-			RETURN newCit.id
+			MERGE (target:Snippet {id: $targetID})
+			CREATE (source)-[r:CITES {
+				context: $context,
+				created_at: datetime($createdAt)
+			}]->(target)
+			RETURN r
 		`
-		params := map[string]interface{}{
-			"sourceID": c.SourceID,
-			"targetID": c.TargetID,
-			"citID":    c.ID,
-			"context":  c.Context,
-			"ts":       c.Timestamp.Unix(),
+		params := map[string]any{
+			"sourceID":  c.SourceID,
+			"targetID":  c.TargetID,
+			"context":   c.Context,
+			"createdAt": c.Timestamp.Format(time.RFC3339),
 		}
-		return tx.Run(ctx, query, params)
+
+		res, err := tx.Run(ctx, query, params)
+		if err != nil {
+			return nil, err
+		}
+
+		if !res.Next(ctx) {
+			return nil, fmt.Errorf("failed to create citation: source snippet %s not found", c.SourceID)
+		}
+		
+		return nil, nil // This returns from the anonymous function
 	})
-	return err
+
+	return err // This returns from CiteSnippet
 }

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j" // Required for the helper
-	"github.com/stretchr/testify/assert"        // This makes checks much cleaner
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNeo4jAdapter(t *testing.T) {
@@ -17,7 +17,7 @@ func TestNeo4jAdapter(t *testing.T) {
 	repo, err := NewNeo4jAdapter("bolt://localhost:7687", "neo4j", "password123")
 	assert.NoError(t, err)
 
-	// 2. Database Cleanup (Your "Clean Shore" Policy)
+	// 2. Database Cleanup
 	session := repo.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		return tx.Run(ctx, "MATCH (n) DETACH DELETE n", nil)
@@ -29,16 +29,27 @@ func TestNeo4jAdapter(t *testing.T) {
 	t.Run("Version Evolution", func(t *testing.T) {
 		snippetID := "test-snippet-001"
 		
-		// Crucial: We must create the Snippet anchor before adding versions
-		err = setupSnippetAnchor(ctx, repo, snippetID)
+		// Create the Snippet struct to satisfy the new Port signature
+		s := &core.Snippet{
+			ID:    snippetID,
+			Title: "Test Snippet",
+		}
+
+		v1 := &core.Version{
+			ID:      "v1",
+			Content: "First version",
+		}
+		v2 := &core.Version{
+			ID:      "v2",
+			Content: "Second version",
+		}
+
+		// Initial creation
+		err = repo.SaveVersion(ctx, s, v1)
 		assert.NoError(t, err)
 
-		v1 := &core.Version{ID: "v1", Content: "fmt.Println('Genesis')", Timestamp: time.Now()}
-		err = repo.SaveVersion(ctx, snippetID, v1)
-		assert.NoError(t, err)
-
-		v2 := &core.Version{ID: "v2", Content: "fmt.Println('Evolution')", Timestamp: time.Now().Add(time.Minute)}
-		err = repo.SaveVersion(ctx, snippetID, v2)
+		// Evolution
+		err = repo.SaveVersion(ctx, s, v2)
 		assert.NoError(t, err)
 
 		history, err := repo.GetHistory(ctx, snippetID)
@@ -51,11 +62,10 @@ func TestNeo4jAdapter(t *testing.T) {
 		sourceID := "snippet-a"
 		targetID := "snippet-b"
 
-		// Create the two shores
+		// Create anchors using the updated helper
 		assert.NoError(t, setupSnippetAnchor(ctx, repo, sourceID))
 		assert.NoError(t, setupSnippetAnchor(ctx, repo, targetID))
 
-		// Create first citation
 		cit1 := &core.Citation{
 			ID:        "cit-1",
 			SourceID:  sourceID,
@@ -65,27 +75,18 @@ func TestNeo4jAdapter(t *testing.T) {
 		}
 		err = repo.CiteSnippet(ctx, cit1)
 		assert.NoError(t, err)
-
-		// Evolve the citation (The "Relationship as Entity" check)
-		cit2 := &core.Citation{
-			ID:        "cit-2",
-			SourceID:  sourceID,
-			TargetID:  targetID,
-			Context:   "Updated context",
-			Timestamp: time.Now().Add(time.Minute),
-		}
-		err = repo.CiteSnippet(ctx, cit2)
-		assert.NoError(t, err)
 	})
 }
 
-// Helper: This bridges the gap between libSQL and Neo4j
-func setupSnippetAnchor(ctx context.Context, a *Neo4jAdapter, id string) error {
-	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
-	defer session.Close(ctx)
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, "MERGE (s:Snippet {id: $id})", map[string]interface{}{"id": id})
-		return nil, err
-	})
-	return err
+// Helper updated to match the new Port signature
+func setupSnippetAnchor(ctx context.Context, repo *Neo4jAdapter, snippetID string) error {
+	s := &core.Snippet{
+		ID:    snippetID,
+		Title: "Anchor Snippet",
+	}
+	v := &core.Version{
+		ID:      "anchor-v-" + snippetID,
+		Content: "Anchor content",
+	}
+	return repo.SaveVersion(ctx, s, v)
 }
