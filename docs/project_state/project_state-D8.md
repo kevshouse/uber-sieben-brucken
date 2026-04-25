@@ -26,3 +26,21 @@
 2. **Execute the Backfill:** Run the script against the live local databases and verify that Neo4j correctly hydrates legacy nodes without spawning unnecessary "Migration" versions.
 3. **Delete Propagation (Garbage Collection):** Establish a clear policy and implementation for removing nodes/edges in the graph when a snippet is deleted from the relational store.
 4. **Adapter Teardown (Tech Debt):** Implement graceful `Close()` methods for both the `LibSQLAdapter` and `Neo4jAdapter` to prevent resource leaks in long-running services.
+
+# Day 8 Conclusion (Addendum)
+
+## Architecture Overview
+* **Pattern:** Strict Hexagonal (Ports & Adapters).
+* **The Brain:** `SnippetService` orchestrates domain logic.
+* **Primary Adapters:** HTTP REST API and `cmd/backfill` utility.
+
+## Recent System Alignments
+* **Pragmatic TDD:** Verified the `cmd/backfill` logic using hand-rolled mocks and a Red-Green-Refactor cycle.
+* **Interface Synchronization:** `LibSQLAdapter` now includes `GetAll` and `GraphRepository` handles version metadata.
+* **Core Integrity:** Maintained a strict separation; `internal/core` remains free of infrastructure logic.
+
+## Immediate Roadmap & Known Technical Debt
+1. **Adapter Teardown (Priority):** Implement `Close()` methods for `LibSQLAdapter` and `Neo4jAdapter` to prevent resource leaks.
+2. **Search Implementation:** Finalize HTTP handler logic for `SearchSnippets` using the existing `LibSQLAdapter.Search` method.
+3. **Execute Backfill:** Run the script against live local databases and verify Neo4j hydration.
+4. **Delete Propagation:** Establish a policy for removing nodes/edges when a snippet is deleted.
