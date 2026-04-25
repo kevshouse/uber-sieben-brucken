@@ -86,3 +86,36 @@ func (a *LibSQLAdapter) Search(ctx context.Context, query string) ([]*core.Snipp
 	}
 	return snippets, nil
 }
+
+// GetAll retrieves all snippets from the relational store.
+// This is primarily used for full-table scans like backfill migrations.
+func (a *LibSQLAdapter) GetAll(ctx context.Context) ([]*core.Snippet, error) {
+	query := `SELECT id, title, owner_id, created_at FROM snippets`
+	
+	rows, err := a.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var snippets []*core.Snippet
+
+	for rows.Next() {
+		s := &core.Snippet{}
+		// Scanning all 4 columns to perfectly match your schema
+		if err := rows.Scan(&s.ID, &s.Title, &s.OwnerID, &s.CreatedAt); err != nil {
+			return nil, err
+		}
+		snippets = append(snippets, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if snippets == nil {
+		return []*core.Snippet{}, nil 
+	}
+
+	return snippets, nil
+}
