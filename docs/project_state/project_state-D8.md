@@ -44,3 +44,9 @@
 2. **Search Implementation:** Finalize HTTP handler logic for `SearchSnippets` using the existing `LibSQLAdapter.Search` method.
 3. **Execute Backfill:** Run the script against live local databases and verify Neo4j hydration.
 4. **Delete Propagation:** Establish a policy for removing nodes/edges when a snippet is deleted.
+## A Note Concerning Technical Debt
+
+### Small files
+In a previous conversation, we discussed the fact that I tend to get lost (partly due to dyslexia) in files that have many functions. You suggested that Go is very capable of handling many smaller files in a single directory.
+1. You suggested that we create directories of purpose, filled with the function files that fulfil said purpose.. 
+-  **I therefore request** that this refactoring be added to today's backlog. As we already have the tests, it should be a simple matter to organise efficiently.

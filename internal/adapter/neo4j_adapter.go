@@ -9,6 +9,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
+var _ core.GraphRepository = (*Neo4jAdapter)(nil) // Compile-time check
+
 type Neo4jAdapter struct {
 	driver neo4j.DriverWithContext
 }
@@ -123,4 +125,12 @@ func (a *Neo4jAdapter) CiteSnippet(ctx context.Context, c *core.Citation) error 
 	})
 
 	return err // This returns from CiteSnippet
+}
+
+func (a *Neo4jAdapter) Close() error {
+	if a.driver != nil {
+		// Neo4j driver Close() requires a context.Context
+		return a.driver.Close(context.Background())
+	}
+	return nil
 }

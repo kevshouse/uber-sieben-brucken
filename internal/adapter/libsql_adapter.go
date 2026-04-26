@@ -1,13 +1,5 @@
 package adapter
 
-//import (
-//	"context"
-//	"database/sql"
-//
-//	"github.com/kevshouse/uber-sieben-brucken/internal/core"
-//	_ "github.com/ncruces/go-sqlite3/driver" // '_' forces the compiler to keep package for registering 'libsql' at runtime
-//)
-
 import (
 	"context"
 	"database/sql"
@@ -19,6 +11,9 @@ import (
 	// Switch this back to the libSQL driver we verified yesterday
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
+
+var _ core.IdentityRepository = (*LibSQLAdapter)(nil) // Compile-time check
+
 var _ = time.Now() // This is a "dummy" use to ensure the 'time' package is imported, which is needed for core.Snippet.CreatedAt
 
 type LibSQLAdapter struct {
@@ -118,4 +113,11 @@ func (a *LibSQLAdapter) GetAll(ctx context.Context) ([]*core.Snippet, error) {
 	}
 
 	return snippets, nil
+}
+
+func (a *LibSQLAdapter) Close() error {
+	if a.db != nil {
+		return a.db.Close()
+	}
+	return nil
 }

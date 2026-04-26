@@ -33,7 +33,15 @@ func (m *MockGraphRepo) CiteSnippet(ctx context.Context, c *core.Citation) error
 		return args.Error(0)
 }
 
+func (m *MockIdentityRepo) Close() error {
+		args := m.Called()
+		return args.Error(0)
+}
 
+func (m *MockGraphRepo) Close() error {
+		args := m.Called()
+		return args.Error(0)
+}	
 // Step 2: Test the Dual-Handshake
 func TestCreateSnippet_Handshake(t *testing.T) {
 		mockID := new(MockIdentityRepo)
