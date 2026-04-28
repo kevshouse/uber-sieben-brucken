@@ -33,7 +33,10 @@ Built as a modern evolution of the systems-thinking rigor found at **42 London**
    libSQL is listening on localhost:8081.
 
 ## 📝 The Pothole Philosophy
-This project maintains an active Pothole Log (docs/pothole_log.md). We document every engineering friction point—from YAML indentation traps to port conflicts—ensuring that the "Bridge" we build is informed by the failures of the past.
+ > *Success is built on falling then climbing, not the other way around!*
+
+- This project maintains an active Pothole Log (docs/pothole_log.md).  
+- We document every engineering friction point—from YAML indentation traps to port conflicts—ensuring that the "Bridge" we build is informed by the failures of the past.
 ---
 
 Developed as an independent engineering study, April 2026.

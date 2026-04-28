@@ -1,3 +1,4 @@
+/*
 package core
 
 import "context"
@@ -18,3 +19,4 @@ type GraphRepository interface {
 }
 
 
+*/
