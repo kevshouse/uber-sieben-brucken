@@ -22,7 +22,8 @@ type LibSQLAdapter struct {
 
 // NewLibSQLAdapter initializes the connection and prepares the 'Shore'
 func NewLibSQLAdapter(url string) (*LibSQLAdapter, error) {
-	db, err := sql.Open("sqlite3", url)
+	// CHANGE "sqlite3" to "libsql"
+	db, err := sql.Open("libsql", url) 
 	if err != nil {
 		return nil, err
 	}
@@ -114,10 +115,11 @@ func (a *LibSQLAdapter) GetAll(ctx context.Context) ([]*core.Snippet, error) {
 
 	return snippets, nil
 }
-
+/*
 func (a *LibSQLAdapter) Close() error {
 	if a.db != nil {
 		return a.db.Close()
 	}
 	return nil
 }
+*/

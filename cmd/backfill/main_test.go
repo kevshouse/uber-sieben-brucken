@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
+	_ "github.com/ncruces/go-sqlite3/driver"
 )
 
 // --- 1. Hand-rolled Mocks ---
@@ -23,8 +24,9 @@ type mockGraphRepo struct {
 	err           error
 }
 
-func (m *mockGraphRepo) SaveVersion(ctx context.Context, snippet *core.Snippet) error {
-	m.savedSnippets = append(m.savedSnippets, snippet)
+func (m *mockGraphRepo) SaveVersion(ctx context.Context, s *core.Snippet, v *core.Version) error {
+	m.savedSnippets = append(m.savedSnippets, s)
+	//m.savedVersions = append(m.savedVersions, v)
 	return m.err
 }
 

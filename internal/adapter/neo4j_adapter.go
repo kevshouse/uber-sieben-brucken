@@ -1,10 +1,6 @@
 package adapter
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -22,7 +18,7 @@ func NewNeo4jAdapter(uri, username, password string) (*Neo4jAdapter, error) {
 	}
 	return &Neo4jAdapter{driver: driver}, nil
 }
-
+/*
 func (a *Neo4jAdapter) SaveVersion(ctx context.Context, s *core.Snippet, v *core.Version) error {
 	session := a.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
@@ -134,3 +130,4 @@ func (a *Neo4jAdapter) Close() error {
 	}
 	return nil
 }
+*/

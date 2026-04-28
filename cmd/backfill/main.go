@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
+
 	"github.com/kevshouse/uber-sieben-brucken/internal/adapter"
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 )
@@ -56,14 +58,13 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func main() {
-	// 1. Setup Context with a timeout (e.g., 5 minutes max for the backfill)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	// 2. Load Configuration from Environment
-	libSqlPath := os.Getenv("LIBSQL_DB_PATH")
-	if libSqlPath == "" {
-		libSqlPath = "file:local.db" // Default fallback
+	// 1. Fix the naming to match terminal command exactly
+	libSqlURL := os.Getenv("LIBSQL_URL")
+	if libSqlURL == "" {
+		libSqlURL = "http://localhost:8081" // Default to Docker shore
 	}
 
 	neo4jURI := os.Getenv("NEO4J_URI")
@@ -71,35 +72,29 @@ func main() {
 	neo4jPass := os.Getenv("NEO4J_PASS")
 
 	if neo4jURI == "" {
-		log.Fatal("NEO4J_URI environment variable is required. Example: bolt://localhost:7687")
+		log.Fatal("NEO4J_URI environment variable is required.")
 	}
 
-	// 3. Initialize the Primary Database (libSQL Identity Store)
-	log.Printf("Connecting to libSQL at %s...\n", libSqlPath)
-	idRepo, err := adapter.NewLibSQLAdapter(libSqlPath)
+	// 2. Initialize libSQL (The Identity Shore)
+	log.Printf("🚀 Connecting to libSQL at %s...\n", libSqlURL)
+	idRepo, err := adapter.NewLibSQLAdapter(libSqlURL)
 	if err != nil {
-		log.Fatalf("Failed to initialize libSQL adapter: %v", err)
+		log.Fatalf("Failed to initialize libSQL: %v", err)
 	}
-	// TODO: Implement func (a *LibSQLAdapter) Close() error and uncomment below
-	// defer idRepo.Close()
 
-	// 4. Initialize the Graph Database (Neo4j Store)
-	log.Printf("Connecting to Neo4j at %s...\n", neo4jURI)
+	// 3. Initialize Neo4j (The Graph Shore)
+	log.Printf("🌿 Connecting to Neo4j at %s...\n", neo4jURI)
 	graphRepo, err := adapter.NewNeo4jAdapter(neo4jURI, neo4jUser, neo4jPass)
 	if err != nil {
-		log.Fatalf("Failed to initialize Neo4j adapter: %v", err)
+		log.Fatalf("Failed to initialize Neo4j: %v", err)
 	}
-	// TODO: Implement func (a *Neo4jAdapter) Close(ctx context.Context) error and uncomment below
-	// defer graphRepo.Close(ctx)
 
-	// 5. Wire up the Composition Root
 	runner := NewRunner(idRepo, graphRepo)
-
-	// 6. Execute the Backfill
-	log.Println("Starting backfill migration...")
+	log.Println("🌉 Starting backfill migration...")
+	
 	if err := runner.Run(ctx); err != nil {
 		log.Fatalf("Backfill failed: %v", err)
 	}
 
-	log.Println("Backfill completed successfully!")
+	log.Println("✨ Backfill completed successfully!")
 }
