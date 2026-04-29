@@ -3,65 +3,49 @@ package adapter
 import (
 	"context"
 	"database/sql"
-	"time"
+	"fmt"
 
-	// You'll need this for the CreatedAt timestamps
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
-
-	// Switch this back to the libSQL driver we verified yesterday
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
-
-var _ core.IdentityRepository = (*LibSQLAdapter)(nil) // Compile-time check
-
-var _ = time.Now() // This is a "dummy" use to ensure the 'time' package is imported, which is needed for core.Snippet.CreatedAt
 
 type LibSQLAdapter struct {
 	db *sql.DB
 }
 
-// NewLibSQLAdapter initializes the connection and prepares the 'Shore'
 func NewLibSQLAdapter(url string) (*LibSQLAdapter, error) {
-	// CHANGE "sqlite3" to "libsql"
-	db, err := sql.Open("libsql", url) 
+	db, err := sql.Open("libsql", url)
 	if err != nil {
 		return nil, err
 	}
-
 	adapter := &LibSQLAdapter{db: db}
-
-	// Bootstrap ensures the snippets table exists at startup
-	if err := adapter.Bootstrap(context.Background()); err != nil {
-		return nil, err
-	}
-
 	return adapter, nil
 }
 
-// Bootstrap creates the necessary table if it doesn't exist
-func (a *LibSQLAdapter) Bootstrap(ctx context.Context) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS snippets (
-		id TEXT PRIMARY KEY,
-		title TEXT,
-		owner_id TEXT,
-		created_at DATETIME
-	);`
-	_, err := a.db.ExecContext(ctx, query)
-	return err
+// Save now matches the strict core.IdentityShore interface
+func (a *LibSQLAdapter) Save(ctx context.Context, s *core.Snippet) error {
+    // We no longer need to check if 'entity' is a snippet; 
+    // the compiler guarantees it is now.
+    
+    query := `INSERT INTO snippets (id, title, owner_id, created_at) 
+              VALUES (?, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET 
+              title=excluded.title, owner_id=excluded.owner_id`
+    
+    _, err := a.db.ExecContext(ctx, query, s.ID, s.Title, s.OwnerID, s.CreatedAt)
+    return err
 }
 
-// CreateSnippet satisfies the core.IdentityRepository interface
-
+// CreateSnippet now matches the strict core.IdentityShore interface
 func (a *LibSQLAdapter) CreateSnippet(ctx context.Context, s *core.Snippet) error {
-	query := `INSERT INTO snippets (id, title, owner_id, created_at) VALUES (?, ?, ?, ?)`
-	_, err := a.db.ExecContext(ctx, query, s.ID, s.Title, s.OwnerID, s.CreatedAt)
-	return err
+    // No more type assertion needed! 's' is already a *core.Snippet.
+    query := `INSERT INTO snippets (id, title, owner_id, created_at) VALUES (?, ?, ?, ?)`
+    
+    _, err := a.db.ExecContext(ctx, query, s.ID, s.Title, s.OwnerID, s.CreatedAt)
+    return err
 }
 
-// The "Looking Glass" (Search & Retrieval)
 func (a *LibSQLAdapter) Search(ctx context.Context, query string) ([]*core.Snippet, error) {
-	// Using %query% to find the string in the title.
 	rows, err := a.db.QueryContext(ctx, `SELECT id, title, owner_id, created_at FROM snippets WHERE title LIKE ?`, "%"+query+"%")
 	if err != nil {
 		return nil, err
@@ -69,7 +53,6 @@ func (a *LibSQLAdapter) Search(ctx context.Context, query string) ([]*core.Snipp
 	defer rows.Close()
 
 	var snippets []*core.Snippet
-
 	for rows.Next() {
 		s := &core.Snippet{}
 		if err := rows.Scan(&s.ID, &s.Title, &s.OwnerID, &s.CreatedAt); err != nil {
@@ -77,49 +60,27 @@ func (a *LibSQLAdapter) Search(ctx context.Context, query string) ([]*core.Snipp
 		}
 		snippets = append(snippets, s)
 	}
-	if snippets == nil {
-		return []*core.Snippet{}, nil // Return an empty slice instead of nil
-	}
 	return snippets, nil
 }
 
-// GetAll retrieves all snippets from the relational store.
-// This is primarily used for full-table scans like backfill migrations.
 func (a *LibSQLAdapter) GetAll(ctx context.Context) ([]*core.Snippet, error) {
-	query := `SELECT id, title, owner_id, created_at FROM snippets`
-	
-	rows, err := a.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    var snippets []*core.Snippet
+    query := `SELECT id, title, owner_id, created_at FROM snippets` // Adjust columns to your schema
+    
+    rows, err := a.db.QueryContext(ctx, query)
+    if err != nil {
+        return nil, fmt.Errorf("failed to query snippets: %w", err)
+    }
+    defer rows.Close()
 
-	var snippets []*core.Snippet
-
-	for rows.Next() {
-		s := &core.Snippet{}
-		// Scanning all 4 columns to perfectly match your schema
-		if err := rows.Scan(&s.ID, &s.Title, &s.OwnerID, &s.CreatedAt); err != nil {
-			return nil, err
-		}
-		snippets = append(snippets, s)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if snippets == nil {
-		return []*core.Snippet{}, nil 
-	}
-
-	return snippets, nil
+    for rows.Next() {
+        s := &core.Snippet{}
+        if err := rows.Scan(&s.ID, &s.Title, &s.OwnerID, &s.CreatedAt); err != nil {
+            return nil, err
+        }
+        snippets = append(snippets, s)
+    }
+    return snippets, nil
 }
-/*
-func (a *LibSQLAdapter) Close() error {
-	if a.db != nil {
-		return a.db.Close()
-	}
-	return nil
-}
-*/
+
+func (a *LibSQLAdapter) Close() error { return a.db.Close() }

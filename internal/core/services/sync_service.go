@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kevshouse/uber-sieben-brucken/internal/core/ports"
+	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 )
 	
 
 type SyncService struct {
-	identity 	ports.IdentityShore
-	graph 		ports.GraphShore
+	identity 	core.IdentityShore
+	graph 		core.GraphShore
 }
 
-func NewSyncService(id ports.IdentityShore, g ports.GraphShore) *SyncService {
+func NewSyncService(id core.IdentityShore, g core.GraphShore) *SyncService {
 	return &SyncService{
 		identity: id,
 		graph: g,
@@ -21,14 +21,14 @@ func NewSyncService(id ports.IdentityShore, g ports.GraphShore) *SyncService {
 }
 
 // LiveSync coordinates the synchronous transfer of data to both shores, ensuring consistency and reliability.
-func (s *SyncService) LiveSync(ctx context.Context, data any) error {
+func (s *SyncService) LiveSync(ctx context.Context, snippet *core.Snippet) error {
 	// 1. Persist to Identity Shore
-	if err := s.identity.Save(ctx, data); err != nil {
+	if err := s.identity.Save(ctx, snippet); err != nil {
 		return fmt.Errorf("failed to save to identity shore: %w", err)
 	}
 
 	// 2. Persist to Graph Shore
-	if err := s.graph.SyncNode(ctx, data); err != nil {
+	if err := s.graph.SyncNode(ctx, snippet); err != nil {
 		// Since we are synchrounous, we reporrt this immeadiately.
 		// In a later refactor, we might want to implement a compensation 
 		// mechanism here to rollback or retry the identity shore if the graph shore fails.

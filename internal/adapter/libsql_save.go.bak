@@ -6,9 +6,9 @@ import (
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 )
 
-/// SaveSnippet persists only the IDENTITY metadata into libSQL.
+/// Save persists only the IDENTITY metadata into libSQL.
 // The actual code content (the 'Version')is managed by the Graph current.
-func (a *LibSQLAdapter) SaveSnippet(ctx context.Context, s *core.Snippet) error {
+func (a *LibSQLAdapter) Save(ctx context.Context, s *core.Snippet) error {
 	// 1. Align the Query with the libSQL Schema
 	query := `INSERT INTO snippets (id, title, owner_id, created_at) VALUES (?, ?, ?, ?)`
 	

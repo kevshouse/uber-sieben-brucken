@@ -64,5 +64,10 @@ func (s *SnippetService) SearchSnippets(ctx context.Context, query string) ([]*S
 	if query == "" {
 		return []*Snippet{}, nil
 	}
-	return s.identityRepo.Search(ctx, query) //We ask Identiy Shore (libSQL) to find the matches.
+	results, err := s.identityRepo.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
