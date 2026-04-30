@@ -31,7 +31,7 @@ func (s *SnippetService) CreateSnippet(ctx context.Context, title, ownerID, cont
 		CreatedAt: now,
 	}
 
-	if err := s.identityRepo.CreateSnippet(ctx, snippet); err != nil {
+	if err := s.identityRepo.Save(ctx, snippet); err != nil {
 		return nil, fmt.Errorf("failed to anchor identity: %w", err)
 	}
 

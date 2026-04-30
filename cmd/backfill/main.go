@@ -9,7 +9,8 @@ import (
 
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 
-	"github.com/kevshouse/uber-sieben-brucken/internal/adapter"
+	"github.com/kevshouse/uber-sieben-brucken/internal/adapter/libsql"
+	"github.com/kevshouse/uber-sieben-brucken/internal/adapter/neo4j"
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 )
 
@@ -77,14 +78,14 @@ func main() {
 
 	// 2. Initialize libSQL (The Identity Shore)
 	log.Printf("🚀 Connecting to libSQL at %s...\n", libSqlURL)
-	idRepo, err := adapter.NewLibSQLAdapter(libSqlURL)
+	idRepo, err := libsql.NewLibSQLAdapter(libSqlURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize libSQL: %v", err)
 	}
 
 	// 3. Initialize Neo4j (The Graph Shore)
 	log.Printf("🌿 Connecting to Neo4j at %s...\n", neo4jURI)
-	graphRepo, err := adapter.NewNeo4jAdapter(neo4jURI, neo4jUser, neo4jPass)
+	graphRepo, err := neo4j.NewNeo4jAdapter(neo4jURI, neo4jUser, neo4jPass)
 	if err != nil {
 		log.Fatalf("Failed to initialize Neo4j: %v", err)
 	}

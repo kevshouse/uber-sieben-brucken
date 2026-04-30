@@ -1,4 +1,4 @@
-package adapter
+package neo4j
 
 import (
 	"context"

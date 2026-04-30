@@ -7,7 +7,6 @@ import (
 // IdentityShore defines how we persist the source of truth (libSQL)
 type IdentityShore interface {
 	Save(ctx context.Context, snippet *Snippet) error
-	CreateSnippet(ctx context.Context, snippet *Snippet) error
 	Search(ctx context.Context, query string) ([]*Snippet, error)
 	GetAll(ctx context.Context) ([]*Snippet, error)
 	Close() error

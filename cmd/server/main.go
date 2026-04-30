@@ -11,8 +11,9 @@ import (
 
 	_ "github.com/ncruces/go-sqlite3/driver"
 
-	"github.com/kevshouse/uber-sieben-brucken/internal/adapter"
 	api "github.com/kevshouse/uber-sieben-brucken/internal/adapter/http"
+	"github.com/kevshouse/uber-sieben-brucken/internal/adapter/libsql"
+	"github.com/kevshouse/uber-sieben-brucken/internal/adapter/neo4j"
 	"github.com/kevshouse/uber-sieben-brucken/internal/core"
 )
 
@@ -23,12 +24,12 @@ func main() {
 	neo4jPass := getEnv("NEO4J_PASS", "password123")
 
 	// 1. Initialize Adapters
-	idRepo, err := adapter.NewLibSQLAdapter(libsqlURL)
+	idRepo, err := libsql.NewLibSQLAdapter(libsqlURL)
 	if err != nil {					
 		log.Fatalf("Failed to connect to libSQL: %v", err)
 	}
 
-	graphRepo, err := adapter.NewNeo4jAdapter(neo4jURL, neo4jUser, neo4jPass)
+	graphRepo, err := neo4j.NewNeo4jAdapter(neo4jURL, neo4jUser, neo4jPass)
 	if err != nil {
 		log.Fatalf("Failed to connect to Neo4j: %v", err)
 	}
