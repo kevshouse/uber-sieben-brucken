@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -76,12 +77,18 @@ func main() {
 		log.Fatal("NEO4J_URI environment variable is required.")
 	}
 
-	// 2. Initialize libSQL (The Identity Shore)
-	log.Printf("🚀 Connecting to libSQL at %s...\n", libSqlURL)
-	idRepo, err := libsql.NewLibSQLAdapter(libSqlURL)
-	if err != nil {
-		log.Fatalf("Failed to initialize libSQL: %v", err)
-	}
+// 2. Initialize libSQL (The Identity Shore)
+    log.Printf("🚀 Connecting to libSQL at %s...\n", libSqlURL)
+    
+    // Step A: The Infrastructure (main.go) takes responsibility for the connection.
+    db, err := sql.Open("libsql", libSqlURL)
+    if err != nil {
+        log.Fatalf("Failed to open libSQL connection: %v", err)
+    }
+    
+    // Step B: Inject that pristine, ready-to-use connection into our adapter!
+    // (Notice we don't need to catch an error here anymore)
+    idRepo := libsql.NewLibSQLAdapter(db)
 
 	// 3. Initialize Neo4j (The Graph Shore)
 	log.Printf("🌿 Connecting to Neo4j at %s...\n", neo4jURI)

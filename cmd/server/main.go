@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -24,11 +25,16 @@ func main() {
 	neo4jPass := getEnv("NEO4J_PASS", "password123")
 
 	// 1. Initialize Adapters
-	idRepo, err := libsql.NewLibSQLAdapter(libsqlURL)
-	if err != nil {					
-		log.Fatalf("Failed to connect to libSQL: %v", err)
-	}
-
+    log.Printf("🚀 Connecting to libSQL at %s...\n", libsqlURL)
+    
+    // Step A: Open the connection
+    db, err := sql.Open("libsql", libsqlURL)
+    if err != nil {
+        log.Fatalf("Failed to open libSQL connection: %v", err)
+    }
+    
+    // Step B: Inject it!
+    idRepo := libsql.NewLibSQLAdapter(db)
 	graphRepo, err := neo4j.NewNeo4jAdapter(neo4jURL, neo4jUser, neo4jPass)
 	if err != nil {
 		log.Fatalf("Failed to connect to Neo4j: %v", err)
