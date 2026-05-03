@@ -11,10 +11,22 @@ import (
 )
 
 type mockService struct{}
-
+/*
 // 1. Matches CreateSnippet in service.go
 func (m *mockService) CreateSnippet(ctx context.Context, title, ownerID, content string) (*core.Snippet, error) {
     return &core.Snippet{Title: title}, nil
+}
+*/
+
+// 1. Matches CreateGenesis in our new SnippetService Interface
+func (m *mockService) CreateGenesis(ctx context.Context, title, ownerID, content string) (*core.Snippet, error){
+	// We return a dummy snippet so our hanler test can 
+	// successfully assert a 201 Created status code!
+	return &core.Snippet{
+		ID: "genesis-mock-id",
+		Title: title,
+		OwnerID: ownerID,
+	}, nil
 }
 
 // 2. Matches CiteSnippet in service.go
